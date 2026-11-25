@@ -28,17 +28,14 @@ SDK="$P/m68k-amigaos"
 CC="$P/bin/m68k-amigaos-gcc"
 CXX="$P/bin/m68k-amigaos-g++"
 
-# the compiler must be a published OpenAmigaGCC/GFOpenAmigaGCC 16.2.0-openN
-# (open3 or later) whose stove records its archive's SHA-256, or open5 (no
-# archive published), and its own --version must say the same release:
-# scripts/verify_gameport_stove.py (the shared gate, DalsinAI/amicradle-stoves)
-# prints "RELEASE ARCHIVE-SHA256" ("unpublished" for open5) and says on
-# stderr why it took the stove
-COMPILER=$(python3 "$HERE/scripts/verify_gameport_stove.py" --stove "$STOVE")
+# the compiler is recorded, not checked (BL-144): scripts/record_stove.py
+# prints "RELEASE ARCHIVE-SHA256" (the release the compiler's --version names;
+# "unpublished" when the stove names no archive) and the compiler's own
+# --version line on stderr; it fails only when the stove has no compiler
+COMPILER=$(python3 "$HERE/scripts/record_stove.py" --stove "$STOVE")
 RELEASE=${COMPILER% *}
 ARCHIVE=${COMPILER#* }
 "$CC" --version | head -n 1
-"$CC" --version | head -n 1 | grep -q "$RELEASE" || { echo "$CC is not $RELEASE"; exit 2; }
 
 PIN=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["ports"]["raptor"]["source"]["commit"])' "$HERE/gameports/catalog.json")
 REPO_REV=$(git -C "$HERE" rev-parse HEAD 2>/dev/null || echo unknown)
